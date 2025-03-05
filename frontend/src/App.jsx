@@ -3,9 +3,10 @@ import MainPage from "./pages/MainPage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
-/*import DashboardPage from "./pages/DashboardPage";
-import PrivateRouter from "./componets/PrivateRoute";
-*/
+import DashboardPage from "./pages/DashboardPage";
+import PrivateRoute from "./components/PrivateRoute";
+
+
 function App() {
   return (
     <Router>
@@ -18,7 +19,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
 
           {/* Protexted Route (Only Authenticated Users) */}
-          {/*<Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />*/}
+          <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
         </Routes>
       </div>
     </Router>
