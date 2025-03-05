@@ -15,7 +15,7 @@ const PrivateRoute = ({ children }) => {
 		}
 	}, [navigate, location]);
 
-	return isAuthenticated ? children : null; // Prevents flickering issues
+	return isAuthenticated ? children : null;
 };
 
 export default PrivateRoute;

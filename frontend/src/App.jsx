@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import DashboardPage from "./pages/DashboardPage";
 import PrivateRoute from "./components/PrivateRoute";
+import BudgetPage from "./pages/BudgetPage";
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
 
           {/* Protexted Route (Only Authenticated Users) */}
           <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+          <Route path="/budget" element={<PrivateRoute><BudgetPage /></PrivateRoute>} />
         </Routes>
       </div>
     </Router>

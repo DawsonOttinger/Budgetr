@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import authRoutes from "./routes/authRoutes.js"; // ✅ Import authentication routes
+import budgetRoutes from "./routes/budgetRoutes.js";
 
 dotenv.config(); // Load environment variables
 
@@ -14,6 +15,7 @@ app.use(cors()); // Enables Cross-Origin Resource Sharing
 
 // Routes
 app.use("/api/auth", authRoutes); // ✅ Use auth routes under /api/auth
+app.use("/api/budget", budgetRoutes);
 
 // Connect to MongoDB
 const PORT = process.env.PORT || 5000;
