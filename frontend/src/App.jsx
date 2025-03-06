@@ -6,6 +6,7 @@ import VerifyEmailPage from "./pages/VerifyEmailPage";
 import DashboardPage from "./pages/DashboardPage";
 import PrivateRoute from "./components/PrivateRoute";
 import BudgetPage from "./pages/BudgetPage";
+import TransactionsPage from "./pages/TransactionsPage";
 
 
 function App() {
@@ -19,9 +20,10 @@ function App() {
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Protexted Route (Only Authenticated Users) */}
+          {/* Protected Route (Only Authenticated Users) */}
           <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
           <Route path="/budget" element={<PrivateRoute><BudgetPage /></PrivateRoute>} />
+          <Route path="/transactions" element={<PrivateRoute><TransactionsPage /></PrivateRoute>} />
         </Routes>
       </div>
     </Router>
