@@ -1,38 +1,49 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const DashboardPage = () => {
-  const [user, setUser] = useState({ name: "" });
+  const [user, setUser] = useState({ name: "", email: "" });
+  const [date, setDate] = useState("");
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  const [newAccount, setNewAccount] = useState({ type: "Checking", nickname: "", balance: "" });
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch user data from backend or local storage
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("token");
-
         const response = await fetch("http://localhost:5000/api/auth/user", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         const data = await response.json();
-        console.log("Fetched User Data:", data);
-
         if (!response.ok) throw new Error("Failed to fetch user data");
-
         setUser({ name: data.name, email: data.email });
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
 
+    const fetchBankAccounts = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/bankAccounts/get", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error("Failed to fetch bank accounts");
+        const data = await response.json();
+        setBankAccounts(data);
+      } catch (error) {
+        console.error("Error fetching bank accounts:", error);
+      }
+    };
+
     fetchUserData();
-  }, []); // Replace with actual user data
-  const [date, setDate] = useState("");
-  const [bankAccounts, setBankAccounts] = useState([]);
-  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
-  const [newAccount, setNewAccount] = useState({ type: "Checking", nickname: "", balance: "" });
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+    fetchBankAccounts();
+  }, []);
 
   useEffect(() => {
     const today = new Date();
@@ -42,7 +53,41 @@ const DashboardPage = () => {
 
   const toggleProfileMenu = () => setShowProfileMenu(!showProfileMenu);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  };
 
+  const saveBankAccounts = async (accounts) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/bankAccounts/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ accounts }),
+      });
+      if (!response.ok) throw new Error("Failed to save bank accounts");
+    } catch (error) {
+      console.error("Error saving bank accounts:", error);
+    }
+  };
+
+  const addBankAccount = () => {
+    const updatedAccounts = [...bankAccounts, newAccount];
+    setBankAccounts(updatedAccounts);
+    saveBankAccounts(updatedAccounts);
+    setNewAccount({ type: "Checking", nickname: "", balance: "" });
+    setShowAddAccountModal(false);
+  };
+
+  const deleteBankAccount = (index) => {
+    const updatedAccounts = bankAccounts.filter((_, i) => i !== index);
+    setBankAccounts(updatedAccounts);
+    saveBankAccounts(updatedAccounts);
+  };
 
   const budgetData = [
     { name: "Housing", value: 30 },
@@ -61,8 +106,7 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-yellow-200 to-pink-300 px-6 py-4">
-      {/* Navbar */}
-      <nav className="flex justify-between items-center py-4">
+      <nav className="flex justify-between items-center bg-white shadow-md p-4 rounded-lg">
         <img src="/logo.png" alt="Budgetr Logo" className="h-12" />
         <div className="flex gap-6">
           <Link to="/dashboard" className="hover:underline">Dashboard</Link>
@@ -74,28 +118,21 @@ const DashboardPage = () => {
             {user.name.charAt(0).toUpperCase()}
           </button>
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg dlex flex-col items-center text-center">
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg dlex flex-col items-center text-center p-4">
               <p className="text-sm font-bold">Hello, {user.name}</p>
               <p className="text-xs text-gray-600">{user.email}</p>
               <hr className="my-2" />
-              <button className="w-full text-center hover:underline">Link with Plaid</button>
-              <button className="w-full text-center hover:underline">Logout</button>
-              <div className="flex items-center text-center mt-2">
-                <span className="mr-2">Dark Mode</span>
-                <input type="checkbox" className="toggle-checkbox" />
-              </div>
+              <button onClick={handleLogout} className="w-full text-center hover:underline">Logout</button>
             </div>
           )}
         </div>
       </nav>
 
-      {/* Greeting & Date */}
       <div className="text-left mt-6">
         <h1 className="text-3xl font-bold">Hello, {user.name}. Welcome back!</h1>
         <p className="text-gray-600">{date}</p>
       </div>
 
-      {/* Bank Accounts & Pie Chart */}
       <div className="flex flex-col md:flex-row mt-6 gap-6">
         <div className="w-full md:w-1/3 bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
           <h2 className="text-lg font-semibold flex items-center justify-between w-full">Bank Accounts <button className="ml-2 px-3 py-1 bg-blue-500 text-white rounded-full shadow-lg text-lg" onClick={() => setShowAddAccountModal(true)}>+</button></h2>
@@ -121,7 +158,7 @@ const DashboardPage = () => {
                       <td className="p-2">
                         <button
                           className="text-red-500 hover:underline"
-                          onClick={() => setBankAccounts(bankAccounts.filter((_, i) => i !== index))}
+                          onClick={() => deleteBankAccount(index)}
                         >Delete</button>
                       </td>
                     </tr>
@@ -130,9 +167,6 @@ const DashboardPage = () => {
               </table>
             )}
           </div>
-
-
-
         </div >
 
         <div className="w-full md:w-2/3 bg-white shadow-lg rounded-lg p-6">
@@ -191,21 +225,17 @@ const DashboardPage = () => {
                 >Cancel</button>
                 <button
                   className='px-4 py-2 bg-blue-500 text-white rounded-lg'
-                  onClick={() => {
-                    setBankAccounts([...bankAccounts, newAccount]);
-                    setNewAccount({ type: "Checking", nickname: "", balance: "" });
-                    setShowAddAccountModal(false);
-                  }}
+                  onClick={addBankAccount}
                 >Add</button>
               </div>
             </div>
           </div>
         )}
-
       </div >
     </div >
   );
 };
 
 export default DashboardPage;
+
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -11,11 +11,38 @@ const TransactionsPage = () => {
     transactionName: "",
     amount: "",
   });
+  const [user, setUser] = useState({ name: "User", email: "email@example.com" });
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
     setTransactions(storedTransactions);
+
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/auth/user", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        setUser(data);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchUser();
   }, []);
+
+  const toggleProfileMenu = () => setShowProfileMenu(!showProfileMenu);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  };
 
   const handleInputChange = (e) => {
     setNewTransaction({ ...newTransaction, [e.target.name]: e.target.value });
@@ -43,15 +70,25 @@ const TransactionsPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-yellow-200 to-pink-300 p-6">
-      <nav className="flex justify-between items-center bg-white shadow-md p-4 rounded-lg">
-        <div className="text-xl font-bold">BUDGETR</div>
-        <div>
-          <Link to="/dashboard" className="mx-4 text-gray-700 hover:text-black">Dashboard</Link>
-          <Link to="/budget" className="mx-4 text-gray-700 hover:text-black">Budget</Link>
-          <Link to="/transactions" className="mx-4 text-gray-700 hover:text-black">Transactions</Link>
+      <nav className="flex justify-between items-center bg-white shadow-md p-4 rounded-lg mb-6">
+        <img src="/logo.png" alt="Budgetr Logo" className="h-12" />
+        <div className="flex gap-6">
+          <Link to="/dashboard" className="hover:underline">Dashboard</Link>
+          <Link to="/budget" className="hover:underline">Budget</Link>
+          <Link to="/transactions" className="hover:underline">Transactions</Link>
         </div>
-        <div className="bg-black text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer">
-          D
+        <div className="relative">
+          <button className="w-10 h-10 bg-black text-white rounded-full" onClick={toggleProfileMenu}>
+            {user.name.charAt(0).toUpperCase()}
+          </button>
+          {showProfileMenu && (
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg dlex flex-col items-center text-center p-4">
+              <p className="text-sm font-bold">Hello, {user.name}</p>
+              <p className="text-xs text-gray-600">{user.email}</p>
+              <hr className="my-2" />
+              <button onClick={handleLogout} className="w-full text-center hover:underline">Logout</button>
+            </div>
+          )}
         </div>
       </nav>
       <div className="container mx-auto mt-6">

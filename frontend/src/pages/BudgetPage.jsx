@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const BudgetPage = () => {
@@ -16,7 +17,10 @@ const BudgetPage = () => {
   });
 
   const [monthlyIncome, setMonthlyIncome] = useState(0);
-  const [payFrequency, setPayFrequency] = useState("monthly");
+  const [user, setUser] = useState({ name: "User", email: "email@example.com" });
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBudget = async () => {
@@ -30,14 +34,38 @@ const BudgetPage = () => {
         const data = await response.json();
         setBudget(data);
         setMonthlyIncome(data.monthlyIncome);
-        setPayFrequency(data.payFrequency);
       } catch (error) {
         console.error("Error fetching budget:", error);
       }
     };
 
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/auth/user", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) return;
+        const data = await response.json();
+        setUser(data);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
     fetchBudget();
+    fetchUser();
   }, []);
+
+  const toggleProfileMenu = () => {
+    setShowProfileMenu(!showProfileMenu);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  };
 
   const handleChange = (e) => {
     setBudget({ ...budget, [e.target.name]: e.target.value });
@@ -47,17 +75,13 @@ const BudgetPage = () => {
     setMonthlyIncome(e.target.value);
   };
 
-  const handleFrequencyChange = (e) => {
-    setPayFrequency(e.target.value);
-  };
-
   const saveBudget = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:5000/api/budget/save", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ budget, monthlyIncome, payFrequency }),
+        body: JSON.stringify({ budget, monthlyIncome }),
       });
 
       if (!response.ok) throw new Error("Failed to save budget");
@@ -67,13 +91,7 @@ const BudgetPage = () => {
     }
   };
 
-  const calculateYearlyIncome = () => {
-    if (payFrequency === "weekly") return (monthlyIncome / 4) * 52;
-    if (payFrequency === "biweekly") return (monthlyIncome / 2) * 26;
-    return monthlyIncome * 12; // Monthly & Military
-  };
-
-  const yearlyIncome = calculateYearlyIncome();
+  const yearlyIncome = monthlyIncome * 12;
 
   const totalBudget = Object.values(budget).reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
   const chartData = Object.entries(budget).map(([key, value]) => ({
@@ -85,6 +103,27 @@ const BudgetPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-yellow-200 to-pink-300 p-6">
+      <nav className="flex justify-between items-center bg-white shadow-md p-4 rounded-lg mb-6">
+        <img src="/logo.png" alt="Budgetr Logo" className="h-12" />
+        <div className="flex gap-6">
+          <Link to="/dashboard" className="hover:underline">Dashboard</Link>
+          <Link to="/budget" className="hover:underline">Budget</Link>
+          <Link to="/transactions" className="hover:underline">Transactions</Link>
+        </div>
+        <div className="relative">
+          <button className="w-10 h-10 bg-black text-white rounded-full" onClick={toggleProfileMenu}>
+            {user.name.charAt(0).toUpperCase()}
+          </button>
+          {showProfileMenu && (
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg dlex flex-col items-center text-center p-4">
+              <p className="text-sm font-bold">Hello, {user.name}</p>
+              <p className="text-xs text-gray-600">{user.email}</p>
+              <hr className="my-2" />
+              <button onClick={handleLogout} className="w-full text-center hover:underline">Logout</button>
+            </div>
+          )}
+        </div>
+      </nav>
       <div className="container mx-auto">
         <h1 className="text-3xl font-bold text-center">Budget</h1>
         <div className="grid grid-cols-2 gap-6 mt-8">
@@ -107,29 +146,11 @@ const BudgetPage = () => {
               <label className="block font-semibold">Monthly Net Income</label>
               <input type="number" value={monthlyIncome} onChange={handleIncomeChange} className="w-full p-2 border rounded" />
             </div>
-            <div className="mb-4">
-              <label className="block font-semibold">Pay Frequency</label>
-              <div className="flex gap-4">
-                {["weekly", "biweekly", "monthly", "military"].map((freq) => (
-                  <label key={freq} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="payFrequency"
-                      value={freq}
-                      checked={payFrequency === freq}
-                      onChange={handleFrequencyChange}
-                      className="mr-2"
-                    />
-                    {freq.charAt(0).toUpperCase() + freq.slice(1)}
-                  </label>
-                ))}
-              </div>
-            </div>
             <div className="mb-6 font-bold text-green-600 text-xl">
               Yearly Net Income: ${yearlyIncome.toLocaleString()} / year
             </div>
             <button onClick={saveBudget} className="w-full bg-blue-500 text-white p-3 rounded">Save Budget</button>
-            <h2 className="text-lg font-bold">Your Budget Breakdown</h2>
+            <h2 className="text-lg font-bold mt-6">Your Budget Breakdown</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie data={chartData} cx="50%" cy="50%" outerRadius={100} label>
@@ -149,4 +170,3 @@ const BudgetPage = () => {
 };
 
 export default BudgetPage;
-
