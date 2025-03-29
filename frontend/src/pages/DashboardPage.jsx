@@ -118,7 +118,7 @@ const DashboardPage = () => {
             {user.name.charAt(0).toUpperCase()}
           </button>
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg dlex flex-col items-center text-center p-4">
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg flex flex-col items-center text-center p-4">
               <p className="text-sm font-bold">Hello, {user.name}</p>
               <p className="text-xs text-gray-600">{user.email}</p>
               <hr className="my-2" />
@@ -135,7 +135,9 @@ const DashboardPage = () => {
 
       <div className="flex flex-col md:flex-row mt-6 gap-6">
         <div className="w-full md:w-1/3 bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
-          <h2 className="text-lg font-semibold flex items-center justify-between w-full">Bank Accounts <button className="ml-2 px-3 py-1 bg-blue-500 text-white rounded-full shadow-lg text-lg" onClick={() => setShowAddAccountModal(true)}>+</button></h2>
+          <h2 className="text-lg font-semibold flex items-center justify-between w-full">
+            Bank Accounts <button className="ml-2 px-3 py-1 bg-blue-500 text-white rounded-full shadow-lg text-lg" onClick={() => setShowAddAccountModal(true)}>+</button>
+          </h2>
           <div className="h-32 w-full bg-gray-100 rounded-lg shadow-inner mt-4 overflow-y-auto p-2">
             {bankAccounts.length === 0 ? (
               <p className="text-gray-500 text-center">No bank accounts have been added.</p>
@@ -167,7 +169,7 @@ const DashboardPage = () => {
               </table>
             )}
           </div>
-        </div >
+        </div>
 
         <div className="w-full md:w-2/3 bg-white shadow-lg rounded-lg p-6">
           <h2 className="text-lg font-semibold">Budget Overview</h2>
@@ -180,7 +182,8 @@ const DashboardPage = () => {
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
-                label>
+                label
+              >
                 {budgetData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={colors[index]} />
                 ))}
@@ -231,11 +234,9 @@ const DashboardPage = () => {
             </div>
           </div>
         )}
-      </div >
-    </div >
+      </div>
+    </div>
   );
 };
 
 export default DashboardPage;
-
-

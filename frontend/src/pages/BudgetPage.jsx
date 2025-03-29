@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
@@ -15,52 +15,39 @@ const BudgetPage = () => {
     personal: "",
     entertainment: "",
   });
-
   const [monthlyIncome, setMonthlyIncome] = useState(0);
-  const [user, setUser] = useState({ name: "User", email: "email@example.com" });
+  const [user, setUser] = useState({ name: "", email: "" });
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchBudget = async () => {
+    const fetchUserAndBudget = async () => {
+      const token = localStorage.getItem("token");
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/budget/get", {
+        const userRes = await fetch("http://localhost:5000/api/auth/user", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!response.ok) return;
-        const data = await response.json();
-        setBudget(data);
-        setMonthlyIncome(data.monthlyIncome);
-      } catch (error) {
-        console.error("Error fetching budget:", error);
-      }
-    };
-
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/auth/user", {
+        const userData = await userRes.json();
+        if (!userRes.ok) throw new Error("User fetch failed");
+        setUser(userData);
+  
+        const budgetRes = await fetch("http://localhost:5000/api/budget/get", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!response.ok) return;
-        const data = await response.json();
-        setUser(data);
-      } catch (error) {
-        console.error("Error fetching user:", error);
+        if (!budgetRes.ok) return;
+        const data = await budgetRes.json();
+        setBudget(data); 
+        setMonthlyIncome(data.monthlyIncome || 0);
+      } catch (err) {
+        console.error("Fetch error:", err);
       }
     };
-
-    fetchBudget();
-    fetchUser();
+  
+    fetchUserAndBudget();
   }, []);
 
-  const toggleProfileMenu = () => {
-    setShowProfileMenu(!showProfileMenu);
-  };
+  const toggleProfileMenu = () => setShowProfileMenu(!showProfileMenu);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -80,10 +67,12 @@ const BudgetPage = () => {
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:5000/api/budget/save", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ budget, monthlyIncome }),
       });
-
       if (!response.ok) throw new Error("Failed to save budget");
       alert("Budget saved successfully!");
     } catch (error) {
@@ -93,10 +82,9 @@ const BudgetPage = () => {
 
   const yearlyIncome = monthlyIncome * 12;
 
-  const totalBudget = Object.values(budget).reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
   const chartData = Object.entries(budget).map(([key, value]) => ({
     name: key.charAt(0).toUpperCase() + key.slice(1),
-    value: (parseFloat(value) || 0),
+    value: parseFloat(value) || 0,
   }));
 
   const COLORS = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#C9CBCF", "#FFCD56", "#36A2EB", "#4CAF50"];
@@ -115,7 +103,7 @@ const BudgetPage = () => {
             {user.name.charAt(0).toUpperCase()}
           </button>
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg dlex flex-col items-center text-center p-4">
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg flex flex-col items-center text-center p-4">
               <p className="text-sm font-bold">Hello, {user.name}</p>
               <p className="text-xs text-gray-600">{user.email}</p>
               <hr className="my-2" />
@@ -124,6 +112,7 @@ const BudgetPage = () => {
           )}
         </div>
       </nav>
+
       <div className="container mx-auto">
         <h1 className="text-3xl font-bold text-center">Budget</h1>
         <div className="grid grid-cols-2 gap-6 mt-8">
@@ -134,7 +123,7 @@ const BudgetPage = () => {
                 <input
                   type="number"
                   name={category}
-                  value={budget[category]}
+                  value={budget[category] || ""}
                   onChange={handleChange}
                   className="w-full p-2 border rounded"
                 />
@@ -144,7 +133,12 @@ const BudgetPage = () => {
           <div>
             <div className="mb-4">
               <label className="block font-semibold">Monthly Net Income</label>
-              <input type="number" value={monthlyIncome} onChange={handleIncomeChange} className="w-full p-2 border rounded" />
+              <input
+                type="number"
+                value={monthlyIncome}
+                onChange={handleIncomeChange}
+                className="w-full p-2 border rounded"
+              />
             </div>
             <div className="mb-6 font-bold text-green-600 text-xl">
               Yearly Net Income: ${yearlyIncome.toLocaleString()} / year

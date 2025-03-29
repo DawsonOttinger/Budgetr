@@ -1,29 +1,33 @@
 import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
-import authRoutes from "./routes/authRoutes.js"; // ✅ Import authentication routes
-import budgetRoutes from "./routes/budgetRoutes.js";
+import dotenv from "dotenv";
+import cors from "cors";
 
-dotenv.config(); // Load environment variables
+import authRoutes from "./routes/authRoutes.js";
+import budgetRoutes from "./routes/budgetRoutes.js";
+import bankAccountRoutes from "./routes/bankAccountRoutes.js";
 
 const app = express();
+dotenv.config();
 
-// Middleware
-app.use(express.json()); // Allows parsing of JSON requests
-app.use(cors()); // Enables Cross-Origin Resource Sharing
+app.use(cors());
+app.use(express.json());
 
 // Routes
-app.use("/api/auth", authRoutes); // ✅ Use auth routes under /api/auth
+app.use("/api/auth", authRoutes);
 app.use("/api/budget", budgetRoutes);
+app.use("/api/bankAccounts", bankAccountRoutes);
 
-// Connect to MongoDB
 const PORT = process.env.PORT || 5000;
-mongoose
-	.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-	.then(() => {
-		console.log("✅ MongoDB Connected");
-		app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-	})
-	.catch((error) => console.error("❌ MongoDB Connection Failed:", error));
 
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });

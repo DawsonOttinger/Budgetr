@@ -28,14 +28,14 @@ function LoginPage() {
           setError("Your email and/or password was incorrect. Please try again");
         }
       } else {
-        setError("An error occured. Please try again.");
+        setError("An error occurred. Please try again.");
       }
     }
   };
 
   const handleForgotPassword = async () => {
     if (!formData.email) {
-      alert("Please enter your email fist to reset your password.");
+      alert("Please enter your email first to reset your password.");
       return;
     }
 
@@ -53,7 +53,6 @@ function LoginPage() {
       <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-8 text-center">
         <h2 className="text-2xl font-bold mb-4">Welcome back!</h2>
 
-        {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <input
             type="email"
@@ -74,24 +73,20 @@ function LoginPage() {
             required
           />
 
-          {/* Forgot Password */}
           <button type="button" onClick={handleForgotPassword} className="text-blue-600 text-sm hover:underline">
             Forgot Password
           </button>
 
-          {/* Display Error Messages */}
           {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
 
-          {/* Submit Button */}
+          {/* Submit with Enter or click */}
           <button
-            onClick={handleLogin}
-            type="button"
+            type="submit"
             className="mt-6 w-12 h-12 flex items-center justify-center mx-auto rounded-full bg-gradient-to-r from-yellow-300 to-pink-300 shadow-lg hover:scale-105 transition">
             ➝
           </button>
         </form>
 
-        {/* Create an Account */}
         <div className="mt-6 text-sm">
           <p>New here?</p>
           <button onClick={() => navigate("/register")} className="text-blue-600 hover:underline">
